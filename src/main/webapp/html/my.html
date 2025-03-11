@@ -6,6 +6,55 @@
 </head>
 <body>
 <h1>RPG admin panel</h1>
+<h2>Account list:</h2>
+<table id="table">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>title</th>
+        <th>Race</th>
+        <th>Profession</th>
+        <th>Level</th>
+        <th>Birthday</th>
+        <th>Banned</th>
+    </tr>
+    </thead>
+    <tbody>
 
+    </tbody>
+</table>
+<div>
+
+</div>
 </body>
+<script>
+    const table = $("#table")[0];
+    const properties = ["id", "name", "title", "race", "profession", "level", "birthday", "banned"];
+
+    function fillOutTable() {
+        $.ajax({
+            url: "/rest/players",
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                const tbody = table.children[1]
+                for (let elem of data) {
+                    let tr = document.createElement("tr");
+                    for (let property of properties) {
+                        let td = document.createElement("td");
+                        if (property === "birthday") {
+                            td.textContent = new Date(elem[property]).toLocaleDateString();
+                        } else {
+                            td.textContent = elem[property];
+                        }
+                        tr.append(td);
+                    }
+                    tbody.append(tr);
+                }
+            }
+        });
+    }
+    fillOutTable();
+</script>
 </html>
