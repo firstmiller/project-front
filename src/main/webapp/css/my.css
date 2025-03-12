@@ -2,3 +2,12 @@ table, th, td {
     border: 1px solid black;
     border-collapse: collapse;
 }
+.btn_active {
+    color: red;
+}
+input[type='button'] {
+    cursor: pointer;
+}
+td img {
+    cursor: pointer;;
+}

@@ -7,6 +7,12 @@
 <body>
 <h1>RPG admin panel</h1>
 <h2>Account list:</h2>
+<span>Count per page:</span>
+<select id="countOfRows">
+    <option value="3">3</option>
+    <option value="5">5</option>
+    <option value="10">10</option>
+</select>
 <table id="table">
     <thead>
     <tr>
@@ -18,43 +24,138 @@
         <th>Level</th>
         <th>Birthday</th>
         <th>Banned</th>
+        <th>Edit</th>
+        <th>Delete</th>
     </tr>
     </thead>
     <tbody>
 
     </tbody>
 </table>
-<div>
-
+<div id="pages">
+    <span>Pages:</span>
 </div>
 </body>
 <script>
     const table = $("#table")[0];
+    const select = $("#countOfRows")[0];
+    const pages = $("#pages")[0];
     const properties = ["id", "name", "title", "race", "profession", "level", "birthday", "banned"];
+    let currentPage = 0;
+    select.addEventListener("change", () => {
+        updateTable(currentPage);
+        updateBlockPages(currentPage);
+    })
 
-    function fillOutTable() {
-        $.ajax({
-            url: "/rest/players",
+    function onChangingPageButtonClick(event) {
+        let buttonPage = event.currentTarget;
+        let page = Number(buttonPage.value) - 1;
+        currentPage = page;
+        updateTable(page);
+        updateBlockPages(page);
+    }
+
+    function onDeleteButtonClick(event) {
+        let img = event.currentTarget;
+        let id = Number(img.id.split("_")[1]);
+        deleteAccount(id).then(() => {
+            updateTable(currentPage);
+            updateBlockPages(currentPage);
+        })
+    }
+
+    function getCountOfAccounts() {
+        return $.ajax({
+            url: "/rest/players/count",
             type: 'GET',
             dataType: 'json',
-            success: function (data) {
-                const tbody = table.children[1]
-                for (let elem of data) {
-                    let tr = document.createElement("tr");
-                    for (let property of properties) {
-                        let td = document.createElement("td");
-                        if (property === "birthday") {
-                            td.textContent = new Date(elem[property]).toLocaleDateString();
-                        } else {
-                            td.textContent = elem[property];
-                        }
-                        tr.append(td);
-                    }
-                    tbody.append(tr);
-                }
-            }
         });
     }
-    fillOutTable();
+
+    function deleteAccount(id) {
+        return $.ajax({
+            url: `/rest/players/${id}`,
+            type: 'DELETE',
+        });
+    }
+
+    function getData(pageNumber, pageSize) {
+        return $.ajax({
+            url: `/rest/players?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+            type: 'GET',
+            dataType: 'json',
+        });
+    }
+
+    async function updateTable(pageNumber) {
+        console.log(pageNumber);
+        let pageSize = Number(select.value);
+        let data = await getData(pageNumber, pageSize);
+
+        table.children[1].innerHTML = "";
+        appendRowsToTable(data);
+    }
+
+    async function updateBlockPages(pageNumber) {
+        let countOfAccounts = await getCountOfAccounts();
+        let countOfPages = Math.ceil(countOfAccounts / Number(select.value));
+        createBlockPages(pages, countOfPages, pageNumber);
+    }
+
+    function appendRowsToTable(data) {
+        const tbody = table.children[1]
+        for (let i = 0; i < data.length; i++) {
+            let elem = data[i];
+            let tr = document.createElement("tr");
+            for (let property of properties) {
+                let td = document.createElement("td");
+                if (property === "birthday") {
+                    td.textContent = new Date(elem[property]).toLocaleDateString();
+                } else {
+                    td.textContent = elem[property];
+                }
+                tr.append(td);
+            }
+            let id = data[i].id;
+
+            let td1 = document.createElement("td");
+            let imgEdit = document.createElement("img");
+            imgEdit.src = "../img/edit.png";
+            imgEdit.alt = "edit";
+            imgEdit.id = `edit_${id}`;
+            imgEdit.onclick;
+            td1.append(imgEdit);
+
+            let td2 = document.createElement("td");
+            let imgDelete = document.createElement("img");
+            imgDelete.src = "../img/delete.png";
+            imgDelete.alt = "delete";
+            imgDelete.id = `delete_${id}`;
+            imgDelete.onclick = onDeleteButtonClick;
+            td2.append(imgDelete);
+
+            tr.append(td1);
+            tr.append(td2);
+
+            tbody.append(tr);
+        }
+    }
+
+    function createBlockPages(divBlock, countOfPages, currentPage) {
+        divBlock.innerHTML = "<span>Pages:</span>";
+        for (let page = 0; page < countOfPages; page++) {
+            const button = document.createElement("input");
+            if (page === currentPage) {
+                button.className = "btn_active";
+            }
+            button.type = "button";
+            button.value = String(page + 1);
+            button.onclick = onChangingPageButtonClick;
+            divBlock.append(button);
+        }
+    }
+
+    updateTable(0);
+    updateBlockPages(0);
 </script>
 </html>
