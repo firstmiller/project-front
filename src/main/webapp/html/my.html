@@ -35,17 +35,73 @@
 <div id="pages">
     <span>Pages:</span>
 </div>
+<br>
+<h2>Create new account:</h2>
+
+<form>
+    <div>
+        <label>Name:</label>
+        <input type="text" name="name" id="name" minlength="1" maxlength="12" required>
+    </div>
+    <div>
+        <label>Title</label>
+        <input type="text" name="name" id="title" minlength="1" maxlength="30" required>
+    </div>
+    <div>
+        <label>Race:</label>
+        <select id="race">
+            <option value="HUMAN">HUMAN</option>
+            <option value="DWARF">DWARF</option>
+            <option value="ELF">ELF</option>
+            <option value="GIANT">GIANT</option>
+            <option value="ORC">ORC</option>
+            <option value="TROLL">TROLL</option>
+            <option value="HOBBIT">HOBBIT</option>
+        </select>
+    </div>
+    <div>
+        <label>Profession:</label>
+        <select id="profession">
+            <option value="WARRIOR">WARRIOR</option>
+            <option value="ROGUE">ROGUE</option>
+            <option value="SORCERER">SORCERER</option>
+            <option value="CLERIC">CLERIC</option>
+            <option value="PALADIN">PALADIN</option>
+            <option value="NAZGUL">NAZGUL</option>
+            <option value="WARLOCK">WARLOCK</option>
+            <option value="DRUID">DRUID</option>
+        </select>
+    </div>
+    <div>
+        <label>Level:</label>
+        <input type="number"  name="" id="level" min="0" max="100" required >
+    </div>
+    <div>
+        <label>Birthday:</label>
+        <input type="date" name="" id="birthday" required>
+    </div>
+    <div>
+        <label>Banned:</label>
+        <select id="banned">
+            <option value="true">true</option>
+            <option value="false">false</option>
+        </select>
+    </div>
+    <button type="submit" id="createAccountButton">Save</button>
+</form>
 </body>
 <script>
     const table = $("#table")[0];
     const select = $("#countOfRows")[0];
     const pages = $("#pages")[0];
     const properties = ["id", "name", "title", "race", "profession", "level", "birthday", "banned"];
+    const createAccountButton = $("#createAccountButton")[0];
     let currentPage = 0;
     select.addEventListener("change", () => {
         updateTable(currentPage);
         updateBlockPages(currentPage);
     })
+    createAccountButton.addEventListener("click", onCreateAccountButtonClick)
 
     function onChangingPageButtonClick(event) {
         let buttonPage = event.currentTarget;
@@ -62,6 +118,122 @@
             updateTable(currentPage);
             updateBlockPages(currentPage);
         })
+    }
+
+    function onChangeButtonClick(event) {
+        let image = event.currentTarget;
+        image.src = "../img/save.png"
+        image.alt = "save";
+        image.onclick = onSaveButtonClick;
+        let id = image.id.split("_")[1];
+        let tr = document.getElementById(`tr_${id}`);
+        tr.children[9].innerHTML = "";
+
+        let name = tr.children[1];
+        let title = tr.children[2];
+        let race = tr.children[3];
+        let profession = tr.children[4];
+        let banned = tr.children[7];
+
+        let inputName = document.createElement("input");
+        inputName.type = "text";
+        inputName.value = name.textContent;
+        inputName.id = `name_${id}`;
+        name.innerHTML = "";
+        name.append(inputName);
+
+        let inputTitle = document.createElement("input");
+        inputTitle.type = "text";
+        inputTitle.value = title.textContent;
+        inputTitle.id = `title_${id}`;
+
+        title.innerHTML = "";
+        title.append(inputTitle);
+
+        let selectRace = document.createElement("select");
+        selectRace.id = `race_${id}`;
+        const optionsRace = ["HUMAN", "DWARF", "ELF", "GIANT", "ORC", "TROLL", "HOBBIT"];
+        for (let i = 0; i < optionsRace.length; i++) {
+            let option = document.createElement("option");
+            if (optionsRace[i] === race.textContent) {
+                option.setAttribute("selected", "true");
+            }
+            option.value = optionsRace[i];
+            option.textContent = optionsRace[i];
+            selectRace.append(option);
+        }
+        race.innerHTML = "";
+        race.append(selectRace);
+
+        let selectProfession = document.createElement("select");
+        const optionsProfession = ["WARRIOR", "ROGUE", "SORCERER", "CLERIC", "PALADIN", "NAZGUL", "WARLOCK", "DRUID"]
+        selectProfession.id = `profession_${id}`;
+        for (let i = 0; i < optionsProfession.length; i++) {
+            let option = document.createElement("option");
+            if (optionsProfession[i] === profession.textContent) {
+                option.setAttribute("selected", "true");
+            }
+            option.value = optionsProfession[i];
+            option.textContent = optionsProfession[i];
+            selectProfession.append(option);
+        }
+        profession.innerHTML = "";
+        profession.append(selectProfession);
+
+        let optionsBanned = ["true", "false"];
+        let selectBanned = document.createElement("select");
+        selectBanned.id = `banned_${id}`;
+        for (let i = 0; i < optionsBanned.length; i++) {
+            let option = document.createElement("option");
+            if (optionsBanned[i] === banned.textContent) {
+                option.setAttribute("selected", "true");
+            }
+            option.value = optionsBanned[i];
+            option.textContent = optionsBanned[i];
+            selectBanned.append(option);
+        }
+        banned.innerHTML = "";
+        banned.append(selectBanned);
+    }
+
+    async function onSaveButtonClick(event) {
+        let image = event.currentTarget;
+        let id = Number(image.id.split("_")[1]);
+        let nameValue = document.getElementById(`name_${id}`).value;
+        let titleValue = document.getElementById(`title_${id}`).value;
+        let raceValue = document.getElementById(`race_${id}`).value;
+        let professionValue = document.getElementById(`profession_${id}`).value;
+        let bannedValue = document.getElementById(`banned_${id}`).value;
+        let data = {
+            name: nameValue,
+            title: titleValue,
+            race: raceValue,
+            profession: professionValue,
+            banned: bannedValue
+        };
+        await updateAccount(id, data);
+        await updateTable(currentPage);
+    }
+    function onCreateAccountButtonClick(event) {
+        let nameValue = document.getElementById("name").value;
+        let titleValue = document.getElementById("title").value;
+        let professionValue = document.getElementById("profession").value;
+        let raceValue = document.getElementById("race").value;
+        let levelValue = Number(document.getElementById("level").value);
+        let birthdayValue = Number(new Date(document.getElementById("birthday").value).getTime());
+        let bannedValue = Boolean(document.getElementById("banned").value);
+
+        let data = {
+            name: nameValue,
+            title: titleValue,
+            profession: professionValue,
+            level: levelValue,
+            race: raceValue,
+            birthday: birthdayValue,
+            banned: bannedValue
+        }
+        createAccount(data);
+
     }
 
     function getCountOfAccounts() {
@@ -87,8 +259,26 @@
         });
     }
 
+    function updateAccount(id, data) {
+        return $.ajax({
+            url: `/rest/players/${id}`,
+            type: 'POST',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(data),
+        });
+    }
+    function createAccount(data) {
+        return $.ajax({
+            url: `/rest/players`,
+            type: 'POST',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(data),
+        });
+    }
+
     async function updateTable(pageNumber) {
-        console.log(pageNumber);
         let pageSize = Number(select.value);
         let data = await getData(pageNumber, pageSize);
 
@@ -123,7 +313,7 @@
             imgEdit.src = "../img/edit.png";
             imgEdit.alt = "edit";
             imgEdit.id = `edit_${id}`;
-            imgEdit.onclick;
+            imgEdit.onclick = onChangeButtonClick;
             td1.append(imgEdit);
 
             let td2 = document.createElement("td");
@@ -136,6 +326,7 @@
 
             tr.append(td1);
             tr.append(td2);
+            tr.id = `tr_${id}`;
 
             tbody.append(tr);
         }
